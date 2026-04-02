@@ -2,7 +2,7 @@ name: GLM Coding Plan Warmup
 
 on:
   schedule:
-    - cron: ${{ vars.WARMUP_CRON || '15 9 * * 1-5' }}
+    - cron: '15 9 * * 1-5'  # UTC — edit this to your preferred schedule
   workflow_dispatch: {}
 
 jobs:
