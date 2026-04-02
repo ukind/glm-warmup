@@ -61,10 +61,10 @@ Paste your key when prompted.
 
 ### 4. Set your schedule
 
-Default is weekdays at 9:15 AM UTC. Edit the `cron` line in `.github/workflows/warmup.yml` directly:
+Default is weekdays at 9:15 AM UTC. Change it with a repo variable:
 
-```yaml
-    - cron: '15 23 * * 0-4'  # Example: 6:15 AM Jakarta (WIB, UTC+7)
+```bash
+    gh variable set WARMUP_CRON --body "15 11 * * 1-5"
 ```
 
 That's a standard cron expression in UTC. Common conversions:
