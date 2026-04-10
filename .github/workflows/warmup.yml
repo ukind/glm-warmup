@@ -2,7 +2,7 @@ name: GLM Coding Plan Warmup
 
 on:
   schedule:
-    - cron: '15 9 * * 1-5'  # Mon-Fri 9:15 AM UTC — edit this to change schedule
+    - cron: '0 0 * * *' # Everyday 7:00 AM WIB — edit this to change schedule
   workflow_dispatch: {}
 
 jobs:
