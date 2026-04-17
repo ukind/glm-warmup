@@ -1,0 +1,32 @@
+name: OpenCode Go Warmup
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # Everyday 7:00 AM WIB — edit this to change schedule
+  workflow_dispatch: {}
+
+jobs:
+  warmup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    steps:
+      - name: Ping OpenCode Go to anchor 5-hour window
+        env:
+          OPENCODE_GO_API_KEY: ${{ secrets.OPENCODE_GO_API_KEY }}
+        run: |
+          response=$(curl -s -w "\n%{http_code}" https://opencode.ai/zen/go/v1/chat/completions \
+            -H "Authorization: Bearer $OPENCODE_GO_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"model":"minimax-m2.5","messages":[{"role":"user","content":"hi"}],"max_tokens":1}')
+
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 500 ]; then
+            echo "✓ Warmup complete — 5-hour window anchored"
+          else
+            echo "⚠ Request returned HTTP $http_code — check your API key"
+          fi

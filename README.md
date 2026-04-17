@@ -32,9 +32,16 @@ After:       [========== window 1 =========]
 
 ## How it works
 
-A scheduled GitHub Actions workflow sends a minimal `max_tokens: 1` request to the GLM Coding Plan API using `GLM-4.5-Air` (the lightest, fastest model). That single request is enough to start the 5-hour consumption clock. Cost-wise: one token on the cheapest model is nothing.
+A scheduled GitHub Actions workflow sends a minimal `max_tokens: 1` request to the Coding Plan API using the cheapest available model. That single request is enough to start the 5-hour consumption clock. Cost-wise: one token on the cheapest model is nothing.
 
-No CLI install needed — just a `curl` call to Z.ai's OpenAI-compatible endpoint.
+No CLI install needed — just a `curl` call to the OpenAI-compatible endpoint.
+
+## Supported Services
+
+| Service | Workflow File | Cheapest Model | Endpoint |
+|---------|---------------|----------------|----------|
+| GLM (Z.ai) | `warmup.yml` | `GLM-4.5-Air` | `api.z.ai` |
+| OpenCode Go | `warmup-opencode-go.yml` | `MiniMax M2.5` | `opencode.ai` |
 
 ## Setup
 
@@ -44,59 +51,82 @@ No CLI install needed — just a `curl` call to Z.ai's OpenAI-compatible endpoin
 gh repo fork <your-username>/glm-warmup --clone
 ```
 
-### 2. Get your Z.ai API key
+### 2. Get your API key
 
+**For GLM (Z.ai):**
 1. Go to [z.ai API Key management](https://z.ai/manage-apikey/apikey-list)
 2. Create an API key
 3. Make sure your GLM Coding Plan subscription is active
 
+**For OpenCode Go:**
+1. Go to [opencode.ai/auth](https://opencode.ai/auth) and subscribe to Go
+2. Get your API key from the settings
+
 ### 3. Store it as a secret
 
+**For GLM:**
 ```bash
 cd glm-warmup
 gh secret set ZAI_API_KEY
+```
+
+**For OpenCode Go:**
+```bash
+cd glm-warmup
+gh secret set OPENCODE_GO_API_KEY
 ```
 
 Paste your key when prompted.
 
 ### 4. Set your schedule
 
-Default is weekdays at 9:15 AM UTC. To change it, edit the `cron` line in `.github/workflows/warmup.yml`:
+Default is everyday at 7:00 AM WIB (UTC+7). To change it, edit the `cron` line in the workflow file:
 
 ```yaml
 on:
   schedule:
-    - cron: '15 9 * * 1-5'  # ← change this
+    - cron: '0 0 * * *'  # ← change this
 ```
 
 That's a standard cron expression in UTC. Common conversions:
 
-| Timezone | 6:15 AM local in UTC | Cron |
+| Timezone | 7:00 AM local in UTC | Cron |
 |---|---|---|
-| US Pacific (UTC-7) | 1:15 PM | `15 13 * * 1-5` |
-| US Eastern (UTC-4) | 10:15 AM | `15 10 * * 1-5` |
-| US Central (UTC-5) | 11:15 AM | `15 11 * * 1-5` |
-| Central Europe (UTC+2) | 4:15 AM | `15 4 * * 1-5` |
-| Indonesia WIB (UTC+7) | 11:15 PM prev day | `15 23 * * 0-4` |
-| India IST (UTC+5:30) | 12:45 AM | `45 0 * * 1-5` |
-| Japan JST (UTC+9) | 9:15 PM prev day | `15 21 * * 0-4` |
-| Australia AEST (UTC+10) | 8:15 PM prev day | `15 20 * * 0-4` |
+| US Pacific (UTC-7) | 2:00 PM | `0 14 * * *` |
+| US Eastern (UTC-4) | 11:00 AM | `0 11 * * *` |
+| US Central (UTC-5) | 12:00 PM | `0 12 * * *` |
+| Central Europe (UTC+2) | 5:00 AM | `0 5 * * *` |
+| Indonesia WIB (UTC+7) | 12:00 AM | `0 0 * * *` |
+| India IST (UTC+5:30) | 1:30 AM | `30 1 * * *` |
+| Japan JST (UTC+9) | 10:00 PM (prev) | `0 22 * * 0-6` |
 
 Pick something 2-4 hours before you usually start working (depends on your usage pattern).
 
 ### 5. Test it
 
+**For GLM:**
 ```bash
 gh workflow run warmup.yml
+```
+
+**For OpenCode Go:**
+```bash
+gh workflow run warmup-opencode-go.yml
 ```
 
 Check the logs. You should see `✓ Warmup complete — 5-hour window anchored`.
 
 ### 6. Verify
 
-Next morning, check your [Z.ai Usage Statistics](https://z.ai/manage-apikey/usage). You should see a tiny consumption from the warmup request, and your 5-hour window should be anchored to the cron time.
+Next morning, check your usage statistics:
+- GLM: [Z.ai Usage Statistics](https://z.ai/manage-apikey/usage)
+- OpenCode Go: [OpenCode Go Usage](https://opencode.ai/usage)
 
-## About the GLM Coding Plan quota
+You should see a tiny consumption from the warmup request, and your 5-hour window should be anchored to the cron time.
+
+## About the Coding Plan quota
+
+### GLM Coding Plan
 
 From [Z.ai docs](https://docs.z.ai/devpack/overview):
 
@@ -105,7 +135,7 @@ From [Z.ai docs](https://docs.z.ai/devpack/overview):
 - The plan can only be used within supported coding tools (Claude Code, OpenCode, Cline, Cursor, etc.) — but the API endpoint works for warmup purposes.
 - `GLM-4.5-Air` maps to Claude Code's "haiku" slot — the lightest, fastest model.
 
-### Plan limits
+#### Plan limits
 
 | Plan | 5-Hour Limit | Weekly Limit |
 |---|---|---|
@@ -113,19 +143,43 @@ From [Z.ai docs](https://docs.z.ai/devpack/overview):
 | Pro ($30/mo) | ~400 prompts | ~2,000 prompts |
 | Max ($90/mo) | ~1,600 prompts | ~8,000 prompts |
 
+### OpenCode Go
+
+From [OpenCode Go docs](https://dev.opencode.ai/docs/go/):
+
+- The 5-hour window is **dynamically refreshed** — quota resets 5 hours after consumption.
+- Monthly limits are also tracked.
+- Most models use OpenAI-compatible endpoint (`@ai-sdk/openai-compatible`).
+- `MiniMax M2.5` is the lightest model — 20,000 requests per 5 hours.
+
+#### Plan limits
+
+| Limit | Amount |
+|-------|--------|
+| 5-hour window | $12 (~$700 input + 52K cached + 150 output per request) |
+| Weekly | $30 |
+| Monthly | $60 |
+
 ## Questions
 
-**Does this waste quota?** One request with `max_tokens: 1` on GLM-4.5-Air. You won't notice it.
+**Does this waste quota?** One request with `max_tokens: 1` on the cheapest model. You won't notice it.
 
-**What if I'm already rate-limited?** Still works. The request reaches Z.ai's servers either way, and it still starts the 5-hour consumption clock.
+**What if I'm already rate-limited?** Still works. The request reaches the servers either way, and it still starts the 5-hour consumption clock.
 
 **Can I run this locally instead?** Yeah. Put this in a cron job or Task Scheduler:
 
 ```bash
+# GLM
 curl -s https://api.z.ai/api/coding/paas/v4/chat/completions \
   -H "Authorization: Bearer YOUR_ZAI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"GLM-4.5-Air","messages":[{"role":"user","content":"hi"}],"max_tokens":1}'
+
+# OpenCode Go
+curl -s https://opencode.ai/zen/go/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_OPENCODE_GO_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"MiniMax-M2.5","messages":[{"role":"user","content":"hi"}],"max_tokens":1}'
 ```
 
 GitHub Actions is just easier because your machine doesn't need to be awake.
