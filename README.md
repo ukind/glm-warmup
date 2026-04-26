@@ -42,6 +42,9 @@ No CLI install needed — just a `curl` call to the OpenAI-compatible endpoint.
 |---------|---------------|----------------|----------|
 | GLM (Z.ai) | `warmup.yml` | `GLM-4.5-Air` | `api.z.ai` |
 | OpenCode Go | `warmup-opencode-go.yml` | `MiniMax M2.5` | `opencode.ai` |
+| CrofAI | `warmup-crofai.yml` | `kimi-k2.5` | `crof.ai` |
+| Routing.run | `warmup-routing-run.yml` | `route/kimi-k2.5-highspeed` | `api.routing.run` |
+| Ollama | `warmup-ollama.yml` | `glm-4.7` | `ollama.com` |
 
 ## Setup
 
@@ -73,7 +76,28 @@ gh secret set ZAI_API_KEY
 **For OpenCode Go:**
 ```bash
 cd glm-warmup
+**For OpenCode Go:**
+```bash
+cd glm-warmup
 gh secret set OPENCODE_GO_API_KEY
+```
+
+**For CrofAI:**
+```bash
+cd glm-warmup
+gh secret set CROFAI_API_KEY
+```
+
+**For Routing.run:**
+```bash
+cd glm-warmup
+gh secret set ROUTING_RUN_API_KEY
+```
+
+**For Ollama:**
+```bash
+cd glm-warmup
+gh secret set OLLAMA_API_KEY
 ```
 
 Paste your key when prompted.
@@ -112,6 +136,24 @@ gh workflow run warmup.yml
 **For OpenCode Go:**
 ```bash
 gh workflow run warmup-opencode-go.yml
+**For OpenCode Go:**
+```bash
+gh workflow run warmup-opencode-go.yml
+```
+
+**For CrofAI:**
+```bash
+gh workflow run warmup-crofai.yml
+```
+
+**For Routing.run:**
+```bash
+gh workflow run warmup-routing-run.yml
+```
+
+**For Ollama:**
+```bash
+gh workflow run warmup-ollama.yml
 ```
 
 Check the logs. You should see `✓ Warmup complete — 5-hour window anchored`.
@@ -121,6 +163,9 @@ Check the logs. You should see `✓ Warmup complete — 5-hour window anchored`.
 Next morning, check your usage statistics:
 - GLM: [Z.ai Usage Statistics](https://z.ai/manage-apikey/usage)
 - OpenCode Go: [OpenCode Go Usage](https://opencode.ai/usage)
+- CrofAI: Check your [CrofAI dashboard](https://crof.ai)
+- Routing.run: Check your [Routing.run dashboard](https://routing.run)
+- Ollama: Check your [Ollama account settings](https://ollama.com)
 
 You should see a tiny consumption from the warmup request, and your 5-hour window should be anchored to the cron time.
 
@@ -180,6 +225,24 @@ curl -s https://opencode.ai/zen/go/v1/chat/completions \
   -H "Authorization: Bearer YOUR_OPENCODE_GO_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{"model":"MiniMax-M2.5","messages":[{"role":"user","content":"hi"}],"max_tokens":1}'
+
+# CrofAI
+curl -s https://crof.ai/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_CROFAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"kimi-k2.5","messages":[{"role":"user","content":"hi"}],"max_tokens":1}'
+
+# Routing.run
+curl -s https://api.routing.run/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_ROUTING_RUN_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"route/kimi-k2.5-highspeed","messages":[{"role":"user","content":"hi"}],"max_tokens":1}'
+
+# Ollama
+curl -s https://ollama.com/v1/chat/completions \
+  -H "Authorization: Bearer YOUR_OLLAMA_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"glm-4.7","messages":[{"role":"user","content":"hi"}],"max_tokens":1}'
 ```
 
 GitHub Actions is just easier because your machine doesn't need to be awake.
