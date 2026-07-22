@@ -17,7 +17,7 @@ jobs:
           response=$(curl -s -w "\n%{http_code}" https://ollama.com/v1/chat/completions \
             -H "Authorization: Bearer $OLLAMA_API_KEY" \
             -H "Content-Type: application/json" \
-            -d '{"model":"glm-4.7","messages":[{"role":"user","content":"hi"}],"max_tokens":1}')
+            -d '{"model":"minimax-m3","messages":[{"role":"user","content":"hi"}],"max_tokens":1}')
 
           http_code=$(echo "$response" | tail -1)
           body=$(echo "$response" | sed '$d')
@@ -25,8 +25,9 @@ jobs:
           echo "HTTP Status: $http_code"
           echo "Response: $body"
 
-          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 500 ]; then
+          if [ "$http_code" -ge 200 ] && [ "$http_code" -lt 300 ]; then
             echo "✓ Warmup complete — 5-hour window anchored"
           else
             echo "⚠ Request returned HTTP $http_code — check your API key"
+            exit 1
           fi
